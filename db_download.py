@@ -1,16 +1,28 @@
 import requests
 import os
 
-file_name = "FCCdb_201130_v5_Zenodo.xlsx"
+# DB record
+record_id = "4296944"
+record_url = f"https://zenodo.org/record/{record_id}/files/"
 
-if os.path.isfile(file_name):
-    print("The file " + file_name + " is already existing")
-else:
-    URL = "https://zenodo.org/record/4296944/files/FCCdb_201130_v5_Zenodo.xlsx"
-    print("Starting download")
-    response = requests.get(URL)
-    open(file_name, "wb").write(response.content)
-    print("Download complete")
+# API call
+response = requests.get(f"https://zenodo.org/api/records/{record_id}")
+files = response.json()['files']
 
+# Fetch
+for file in files:
+    if file['key']:
+        if os.path.isfile(file['key']):
+            print("The file " + file['key'] + "  already exists")
+        else:
+            print("Starting download")
 
+            file_url = record_url + file['key']
+            response = requests.get(file_url)
 
+            with open(os.path.basename(file['key']), 'wb') as f:
+                f.write(response.content)
+            print("Download complete")
+            break
+    else:
+        print("File could not be found")
